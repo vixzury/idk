@@ -68,17 +68,25 @@ function Library:CreateWindow(name)
     MainFrame.Name = "MainFrame"
     MainFrame.Size = UDim2.new(0, 600, 0, 450)
     MainFrame.Position = UDim2.new(0.5, -300, 0.5, -225)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10) -- Outer border color
+    MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Outer black outline
     MainFrame.BorderSizePixel = 0
     MainFrame.Parent = ScreenGui
 
-    local InnerFrame = Instance.new("Frame")
-    InnerFrame.Name = "InnerFrame"
-    InnerFrame.Size = UDim2.new(1, -2, 1, -2)
-    InnerFrame.Position = UDim2.new(0, 1, 0, 1)
-    InnerFrame.BackgroundColor3 = Theme.Border -- Middle border color
-    InnerFrame.BorderSizePixel = 0
-    InnerFrame.Parent = MainFrame
+    local Outline2 = Instance.new("Frame")
+    Outline2.Name = "Outline2"
+    Outline2.Size = UDim2.new(1, -2, 1, -2)
+    Outline2.Position = UDim2.new(0, 1, 0, 1)
+    Outline2.BackgroundColor3 = Theme.Border -- Dark grey middle outline
+    Outline2.BorderSizePixel = 0
+    Outline2.Parent = MainFrame
+
+    local Outline3 = Instance.new("Frame")
+    Outline3.Name = "Outline3"
+    Outline3.Size = UDim2.new(1, -2, 1, -2)
+    Outline3.Position = UDim2.new(0, 1, 0, 1)
+    Outline3.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Inner black outline
+    Outline3.BorderSizePixel = 0
+    Outline3.Parent = Outline2
 
     local MainBg = Instance.new("Frame")
     MainBg.Name = "MainBg"
@@ -86,7 +94,7 @@ function Library:CreateWindow(name)
     MainBg.Position = UDim2.new(0, 1, 0, 1)
     MainBg.BackgroundColor3 = Theme.Background
     MainBg.BorderSizePixel = 0
-    MainBg.Parent = InnerFrame
+    MainBg.Parent = Outline3
 
     Library:MakeDraggable(MainFrame)
 
@@ -115,13 +123,12 @@ function Library:CreateWindow(name)
     TabDivider.BorderSizePixel = 1
     TabDivider.Parent = Sidebar
 
-    local TabContainer = Instance.new("ScrollingFrame")
+    local TabContainer = Instance.new("Frame")
     TabContainer.Name = "TabContainer"
     TabContainer.Size = UDim2.new(1, -10, 1, -10)
     TabContainer.Position = UDim2.new(0, 5, 0, 5)
     TabContainer.BackgroundTransparency = 1
     TabContainer.BorderSizePixel = 0
-    TabContainer.ScrollBarThickness = 0
     TabContainer.Parent = TabDivider
 
     local TabListLayout = Instance.new("UIListLayout")
