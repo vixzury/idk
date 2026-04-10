@@ -9,7 +9,6 @@ local Library = {
 	ToggleKey = Enum.KeyCode.RightShift
 }
 
--- Utility for dragging
 local function MakeDraggable(topbarobject, object)
 	local Dragging = nil
 	local DragInput = nil
@@ -59,7 +58,7 @@ function Library:CreateWindow(name)
 
 	local MainOutline = Instance.new("Frame")
 	MainOutline.Name = "MainOutline"
-	MainOutline.Size = UDim2.new(0, 556, 0, 456)
+	MainOutline.Size = UDim2.new(0, 600, 0, 500)
 	MainOutline.Position = UDim2.new(0.5, -278, 0.5, -228)
 	MainOutline.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	MainOutline.BorderSizePixel = 0
