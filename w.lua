@@ -294,76 +294,87 @@ function Library:CreateWindow(name)
 			end
 
 			function Sector:CreateSlider(name, min, max, default, dec, callback)
-				local Slider = Instance.new("Frame")
-				Slider.Name = name .. "Slider"
-				Slider.Size = UDim2.new(1, 0, 0, 30)
-				Slider.BackgroundTransparency = 1
-				Slider.Parent = Content
+                local Slider = Instance.new("Frame")
+                Slider.Name = name .. "Slider"
+                Slider.Size = UDim2.new(1, 0, 0, 30)
+                Slider.BackgroundTransparency = 1
+                Slider.Parent = Content
+                Slider.Active = true   -- Important
 
-				local Label = Instance.new("TextLabel")
-				Label.Size = UDim2.new(1, 0, 0, 15)
-				Label.BackgroundTransparency = 1
-				Label.Text = name:lower()
-				Label.TextColor3 = Color3.fromRGB(180, 180, 180)
-				Label.Font = Enum.Font.Code
-				Label.TextSize = 12
-				Label.TextXAlignment = Enum.TextXAlignment.Left
-				Label.Parent = Slider
+                local Label = Instance.new("TextLabel")
+                Label.Size = UDim2.new(1, 0, 0, 15)
+                Label.BackgroundTransparency = 1
+                Label.Text = name:lower()
+                Label.TextColor3 = Color3.fromRGB(180, 180, 180)
+                Label.Font = Enum.Font.Code
+                Label.TextSize = 12
+                Label.TextXAlignment = Enum.TextXAlignment.Left
+                Label.Parent = Slider
 
-				local Tray = Instance.new("Frame")
-				Tray.Name = "Tray_Slider"
-				Tray.Size = UDim2.new(1, 0, 0, 10)
-				Tray.Position = UDim2.new(0, 0, 0, 18)
-				Tray.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-				Tray.BorderSizePixel = 0
-				Tray.Parent = Slider
+                local Tray = Instance.new("Frame")
+                Tray.Name = "Tray_Slider"
+                Tray.Size = UDim2.new(1, 0, 0, 10)
+                Tray.Position = UDim2.new(0, 0, 0, 18)
+                Tray.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                Tray.BorderSizePixel = 0
+                Tray.Active = true          -- Very important
+                Tray.Parent = Slider
 
-				local TrayStroke = Instance.new("UIStroke")
-				TrayStroke.Color = Color3.fromRGB(50, 50, 50)
-				TrayStroke.Thickness = 1
-				TrayStroke.Parent = Tray
+                local TrayStroke = Instance.new("UIStroke")
+                TrayStroke.Color = Color3.fromRGB(50, 50, 50)
+                TrayStroke.Thickness = 1
+                TrayStroke.Parent = Tray
 
-				local Bar = Instance.new("Frame")
-				Bar.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-				Bar.BackgroundColor3 = Color3.fromRGB(220, 40, 40)
-				Bar.BorderSizePixel = 0
-				Bar.Parent = Tray
+                local Bar = Instance.new("Frame")
+                Bar.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+                Bar.BackgroundColor3 = Color3.fromRGB(220, 40, 40)
+                Bar.BorderSizePixel = 0
+                Bar.Parent = Tray
 
-				local ValueLabel = Instance.new("TextLabel")
-				ValueLabel.Size = UDim2.new(1, 0, 1, 0)
-				ValueLabel.BackgroundTransparency = 1
-				ValueLabel.Text = tostring(default) .. (dec and "%" or "")
-				ValueLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-				ValueLabel.Font = Enum.Font.Code
-				ValueLabel.TextSize = 10
-				ValueLabel.Parent = Tray
+                local ValueLabel = Instance.new("TextLabel")
+                ValueLabel.Size = UDim2.new(1, 0, 1, 0)
+                ValueLabel.BackgroundTransparency = 1
+                ValueLabel.Text = tostring(default) .. (dec and "%" or "")
+                ValueLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                ValueLabel.Font = Enum.Font.Code
+                ValueLabel.TextSize = 10
+                ValueLabel.Parent = Tray
 
-				local function Move(input)
-					local Pos = math.clamp((input.Position.X - Tray.AbsolutePosition.X) / Tray.AbsoluteSize.X, 0, 1)
-					local Val = math.floor(((max - min) * Pos + min) * (10 ^ (0))) / (10 ^ (0))
-					Bar.Size = UDim2.new(Pos, 0, 1, 0)
-					ValueLabel.Text = tostring(Val) .. (dec and "%" or "")
-					callback(Val)
-				end
+                -- === SLIDER DRAG LOGIC ===
+                local SliderDragging = false
 
-				local Dragging = false
-				Tray.InputBegan:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 then
-						Dragging = true
-						Move(input)
-					end
-				end)
-				Tray.InputEnded:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 then
-						Dragging = false
-					end
-				end)
-				UserInputService.InputChanged:Connect(function(input)
-					if Dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-						Move(input)
-					end
-				end)
-			end
+                local function Move(input)
+                       local Pos = math.clamp((input.Position.X - Tray.AbsolutePosition.X) / Tray.AbsoluteSize.X, 0, 1)
+                    local Val = math.floor(((max - min) * Pos + min) * (10 ^ (dec and 1 or 0))) / (10 ^ (dec and 1 or 0))  -- better rounding
+                    
+                    Bar.Size = UDim2.new(Pos, 0, 1, 0)
+                    ValueLabel.Text = tostring(Val) .. (dec and "%" or "")
+                    callback(Val)
+                end
+
+                Tray.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        SliderDragging = true
+                        Move(input)
+            
+                        -- Tell the global draggable that we are handling the input
+                        _G.IsInteractingWithSlider = true
+                    end
+                end)
+
+                Tray.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        SliderDragging = false
+                        _G.IsInteractingWithSlider = false
+                    end
+                end)
+
+                UserInputService.InputChanged:Connect(function(input)
+                    if SliderDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                        Move(input)
+                    end
+                end)
+            end
 
 			function Sector:CreateDropdown(name, list, default, callback)
 				local Dropdown = Instance.new("Frame")
