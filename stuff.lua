@@ -15,12 +15,12 @@ local function MakeDraggable(topbarobject, object)
 
 	topbarobject.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			-- Fix: Check if we're clicking an interactive element
+			-- Fix: Check if we're clicking an interactive element or the settings area
 			local objects = LocalPlayer:WaitForChild("PlayerGui"):GetGuiObjectsAtPosition(input.Position.X, input.Position.Y)
 			local interactive = false
 			for _, v in pairs(objects) do
-				if v:IsA("TextButton") or v:IsA("ScrollingFrame") or v.Name:find("Slider") or v.Name:find("Colorpicker") then
-					if v ~= topbarobject then
+				if v:IsA("TextButton") or v:IsA("ScrollingFrame") or v:IsA("TextBox") or v.Name == "Container" or v.Name:find("Slider") or v.Name:find("Colorpicker") then
+					if v ~= topbarobject and v.Name ~= "Sidebar" then
 						interactive = true
 						break
 					end
