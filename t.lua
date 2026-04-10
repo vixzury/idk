@@ -450,13 +450,12 @@ function Library:CreateWindow(name)
 				end)
 			end
 
-			function Sector:CreateColorpicker(name, default, parent)
-				local Target = parent or Content
+			function Sector:CreateColorpicker(name, default, callback)
 				local Colorpicker = Instance.new("Frame")
 				Colorpicker.Name = name .. "Colorpicker"
 				Colorpicker.Size = UDim2.new(1, 0, 0, 15)
 				Colorpicker.BackgroundTransparency = 1
-				Colorpicker.Parent = Target
+				Colorpicker.Parent = Content
 
 				local Label = Instance.new("TextLabel")
 				Label.Size = UDim2.new(1, -25, 1, 0)
@@ -480,8 +479,6 @@ function Library:CreateWindow(name)
 				BoxStroke.Color = Color3.fromRGB(0, 0, 0)
 				BoxStroke.Parent = Box
 
-				-- Redacted Color Picker popup for brevity, reusing the visual one implemented previously but matched to layout
-				-- (I'll keep the full logic here for the 1:1)
 				local Picker = Instance.new("Frame")
 				Picker.Size = UDim2.new(0, 180, 0, 200)
 				Picker.BackgroundColor3 = Library.Dark
@@ -520,8 +517,13 @@ function Library:CreateWindow(name)
 				SVPointer.Size = UDim2.new(0, 4, 0, 4)
 				SVPointer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 				SVPointer.BorderSizePixel = 0
+				SVPointer.ZIndex = 11
 				SVPointer.Parent = SVSquare
 				
+				local SVPointerStroke = Instance.new("UIStroke")
+				SVPointerStroke.Color = Color3.fromRGB(0, 0, 0)
+				SVPointerStroke.Parent = SVPointer
+
 				local HueSlider = Instance.new("Frame")
 				HueSlider.Size = UDim2.new(0, 12, 0, 140)
 				HueSlider.Position = UDim2.new(0, 160, 0, 10)
@@ -529,19 +531,69 @@ function Library:CreateWindow(name)
 				HueSlider.Parent = Picker
 				local HueGradient = Instance.new("UIGradient")
 				HueGradient.Rotation = 90
-				HueGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 1, 1)), ColorSequenceKeypoint.new(0.5, Color3.fromHSV(0.5, 1, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1))})
+				HueGradient.Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 1, 1)),
+					ColorSequenceKeypoint.new(0.16, Color3.fromHSV(0.16, 1, 1)),
+					ColorSequenceKeypoint.new(0.33, Color3.fromHSV(0.33, 1, 1)),
+					ColorSequenceKeypoint.new(0.5, Color3.fromHSV(0.5, 1, 1)),
+					ColorSequenceKeypoint.new(0.66, Color3.fromHSV(0.66, 1, 1)),
+					ColorSequenceKeypoint.new(0.83, Color3.fromHSV(0.83, 1, 1)),
+					ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1))
+				})
 				HueGradient.Parent = HueSlider
+
+				local HuePointer = Instance.new("Frame")
+				HuePointer.Size = UDim2.new(1, 4, 0, 2)
+				HuePointer.Position = UDim2.new(0, -2, 0, 0)
+				HuePointer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				HuePointer.ZIndex = 11
+				HuePointer.Parent = HueSlider
 
 				local H, S, V = Box.BackgroundColor3:ToHSV()
 				local function Update()
 					local col = Color3.fromHSV(H, S, V)
 					SVSquare.BackgroundColor3 = Color3.fromHSV(H, 1, 1)
 					Box.BackgroundColor3 = col
+					if callback then callback(col) end
 				end
-				-- (Interaction logic truncated for code block brevity, same as previous implementation)
+
+				local function UpdateSV(input)
+					local PosX = math.clamp((input.Position.X - SVSquare.AbsolutePosition.X) / SVSquare.AbsoluteSize.X, 0, 1)
+					local PosY = math.clamp((input.Position.Y - SVSquare.AbsolutePosition.Y) / SVSquare.AbsoluteSize.Y, 0, 1)
+					S, V = PosX, 1 - PosY
+					SVPointer.Position = UDim2.new(PosX, -2, PosY, -2)
+					Update()
+				end
+
+				local function UpdateHue(input)
+					local PosY = math.clamp((input.Position.Y - HueSlider.AbsolutePosition.Y) / HueSlider.AbsoluteSize.Y, 0, 1)
+					H = 1 - PosY
+					HuePointer.Position = UDim2.new(0, -2, PosY, -1)
+					Update()
+				end
+
+				local SVDragging, HueDragging = false, false
+				SVSquare.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then SVDragging = true; UpdateSV(input) end end)
+				HueSlider.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then HueDragging = true; UpdateHue(input) end end)
+				UserInputService.InputChanged:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseMovement then
+						if SVDragging then UpdateSV(input) end
+						if HueDragging then UpdateHue(input) end
+					end
+				end)
+				UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then SVDragging, HueDragging = false, false end end)
+
 				Box.MouseEnter:Connect(function() Library.CanDrag = false end)
 				Box.MouseLeave:Connect(function() Library.CanDrag = true end)
-				Box.MouseButton1Click:Connect(function() Picker.Position = UDim2.new(0, Box.AbsolutePosition.X - 190, 0, Box.AbsolutePosition.Y); Picker.Visible = not Picker.Visible end)
+				Picker.MouseEnter:Connect(function() Library.CanDrag = false end)
+				Picker.MouseLeave:Connect(function() Library.CanDrag = true end)
+
+				Box.MouseButton1Click:Connect(function()
+					Picker.Position = UDim2.new(0, Box.AbsolutePosition.X - 190, 0, Box.AbsolutePosition.Y)
+					Picker.Visible = not Picker.Visible
+				end)
+				
+				Update()
 			end
 
 			function Sector:CreateKeybind(name, default, callback)
