@@ -6,52 +6,60 @@ local Mouse = LocalPlayer:GetMouse()
 
 local Library = {}
 
--- Utility for dragging
 local function MakeDraggable(topbarobject, object)
-	local Dragging = nil
-	local DragInput = nil
-	local DragStart = nil
-	local StartPos = nil
+    local Dragging = false
+    local DragInput = nil
+    local DragStart = nil
+    local StartPos = nil
 
-	topbarobject.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			-- Fix: Check if we're clicking an interactive element or the settings area
-			local objects = LocalPlayer:WaitForChild("PlayerGui"):GetGuiObjectsAtPosition(input.Position.X, input.Position.Y)
-			local interactive = false
-			for _, v in pairs(objects) do
-				if v:IsA("TextButton") or v:IsA("ScrollingFrame") or v:IsA("TextBox") or v.Name == "Container" or v.Name:find("Slider") or v.Name:find("Colorpicker") then
-					if v ~= topbarobject and v.Name ~= "Sidebar" then
-						interactive = true
-						break
-					end
-				end
-			end
-			if interactive then return end
+    topbarobject.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            
+            -- Check if mouse is over any interactive GUI element
+            local objectsAtPos = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"):GetGuiObjectsAtPosition(input.Position.X, input.Position.Y)
+            
+            for _, guiObj in ipairs(objectsAtPos) do
+                if guiObj.Active or 
+                   guiObj:IsA("TextButton") or 
+                   guiObj:IsA("TextBox") or 
+                   guiObj:IsA("ScrollingFrame") or
+                   guiObj.Name:find("Slider") or 
+                   guiObj.Name:find("Dropdown") or 
+                   guiObj.Name:find("Colorpicker") then
+                    
+                    if guiObj ~= topbarobject then
+                        return -- Don't start dragging
+                    end
+                end
+            end
 
-			Dragging = true
-			DragStart = input.Position
-			StartPos = object.Position
+            Dragging = true
+            DragStart = input.Position
+            StartPos = object.Position
 
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					Dragging = false
-				end
-			end)
-		end
-	end)
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    Dragging = false
+                end
+            end)
+        end
+    end)
 
-	topbarobject.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-			DragInput = input
-		end
-	end)
+    topbarobject.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            DragInput = input
+        end
+    end)
 
-	UserInputService.InputChanged:Connect(function(input)
-		if input == DragInput and Dragging then
-			local Delta = input.Position - DragStart
-			object.Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + Delta.X, StartPos.Y.Scale, StartPos.Y.Offset + Delta.Y)
-		end
-	end)
+    UserInputService.InputChanged:Connect(function(input)
+        if Dragging and input == DragInput then
+            local Delta = input.Position - DragStart
+            object.Position = UDim2.new(
+                StartPos.X.Scale, StartPos.X.Offset + Delta.X,
+                StartPos.Y.Scale, StartPos.Y.Offset + Delta.Y
+            )
+        end
+    end)
 end
 
 function Library:CreateWindow(name)
