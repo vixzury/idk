@@ -38,16 +38,8 @@ function Library:CreateWindow(name)
     StatusLabel.Text = os.date("%b %d %Y") .. " | " .. LocalPlayer.Name:lower()
     StatusLabel.TextColor3 = Color3.fromRGB(120,120,120) StatusLabel.TextSize = 12 StatusLabel.Font = Enum.Font.Code StatusLabel.TextXAlignment = Enum.TextXAlignment.Right
 
-    local SidebarArea = Instance.new("Frame", InnerFrame)
-    SidebarArea.Size = UDim2.new(0,140,1,-45) SidebarArea.Position = UDim2.new(0,10,0,10) SidebarArea.BackgroundTransparency = 1
-    Instance.new("UIStroke", SidebarArea).Color = Color3.fromRGB(35,35,35)
-
-    local TabContainer = Instance.new("ScrollingFrame", SidebarArea)
-    TabContainer.Size = UDim2.new(1,-10,1,-10) TabContainer.Position = UDim2.new(0,5,0,5) TabContainer.BackgroundTransparency = 1 TabContainer.BorderSizePixel = 0 TabContainer.ScrollBarThickness = 0
-    Instance.new("UIListLayout", TabContainer).Padding = UDim.new(0,5)
-
     local ContentArea = Instance.new("Frame", InnerFrame)
-    ContentArea.Size = UDim2.new(1,-165,1,-10) ContentArea.Position = UDim2.new(0,155,0,10) ContentArea.BackgroundTransparency = 1
+    ContentArea.Size = UDim2.new(1,-20,1,-10) ContentArea.Position = UDim2.new(0,10,0,10) ContentArea.BackgroundTransparency = 1
 
     -- Dragging
     local dragging, dragStart, startPos
@@ -70,24 +62,14 @@ function Library:CreateWindow(name)
 
     local Window = {CurrentTab = nil}
     function Window:CreateTab(name)
-        local TabBtn = Instance.new("TextButton", TabContainer)
-        TabBtn.Size = UDim2.new(1,0,0,32) TabBtn.BackgroundTransparency = 1 TabBtn.Text = ""
-        local TabLabel = Instance.new("TextLabel", TabBtn)
-        TabLabel.Size = UDim2.new(1,0,1,0) TabLabel.BackgroundTransparency = 1 TabLabel.Text = name:upper() TabLabel.TextColor3 = Color3.fromRGB(180,180,180) TabLabel.TextSize = 15 TabLabel.Font = Enum.Font.GothamBold TabLabel.TextXAlignment = Enum.TextXAlignment.Left
-
         local Page = Instance.new("Frame", ContentArea)
         Page.Size = UDim2.new(1,0,1,0) Page.BackgroundTransparency = 1 Page.Visible = false
-        local Tab = {Page = Page, Label = TabLabel}
+        local Tab = {Page = Page}
 
         local LeftCol = Instance.new("ScrollingFrame", Page) LeftCol.Size = UDim2.new(0.5,-5,1,0) LeftCol.BackgroundTransparency = 1 LeftCol.BorderSizePixel = 0 LeftCol.ScrollBarThickness = 0 Instance.new("UIListLayout", LeftCol).Padding = UDim.new(0,15)
         local RightCol = Instance.new("ScrollingFrame", Page) RightCol.Size = UDim2.new(0.5,-5,1,0) RightCol.Position = UDim2.new(0.5,5,0,0) RightCol.BackgroundTransparency = 1 RightCol.BorderSizePixel = 0 RightCol.ScrollBarThickness = 0 Instance.new("UIListLayout", RightCol).Padding = UDim.new(0,15)
 
-        TabBtn.MouseButton1Click:Connect(function()
-            if Window.CurrentTab then Window.CurrentTab.Page.Visible = false Window.CurrentTab.Label.TextColor3 = Color3.fromRGB(180,180,180) end
-            Page.Visible = true TabLabel.TextColor3 = Color3.fromRGB(255,60,60) Window.CurrentTab = Tab
-        end)
-
-        if not Window.CurrentTab then Page.Visible = true TabLabel.TextColor3 = Color3.fromRGB(255,60,60) Window.CurrentTab = Tab end
+        if not Window.CurrentTab then Page.Visible = true Window.CurrentTab = Tab end
 
         function Tab:AddGroupbox(title, side)
             local Column = (side:lower() == "left") and LeftCol or RightCol
