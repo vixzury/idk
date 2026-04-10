@@ -474,7 +474,7 @@ function Library:CreateWindow(name)
 				BoxStroke.Parent = Box
 
 				local Picker = Instance.new("Frame")
-				Picker.Size = UDim2.new(0, 150, 0, 150)
+				Picker.Size = UDim2.new(0, 180, 0, 200)
 				Picker.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 				Picker.BorderSizePixel = 0
 				Picker.Visible = false
@@ -486,75 +486,216 @@ function Library:CreateWindow(name)
 				PickerStroke.Thickness = 1
 				PickerStroke.Parent = Picker
 
-				local RSlider = Instance.new("TextBox")
-				RSlider.Size = UDim2.new(1, -10, 0, 20)
-				RSlider.Position = UDim2.new(0, 5, 0, 5)
-				RSlider.Text = tostring(math.floor(Box.BackgroundColor3.R * 255))
-				RSlider.PlaceholderText = "Red (0-255)"
-				RSlider.BackgroundColor3 = Color3.fromRGB(30,30,30)
-				RSlider.TextColor3 = Color3.fromRGB(255,255,255)
-				RSlider.Parent = Picker
+				-- SV Square
+				local SVSquare = Instance.new("Frame")
+				SVSquare.Size = UDim2.new(0, 140, 0, 140)
+				SVSquare.Position = UDim2.new(0, 10, 0, 10)
+				SVSquare.BackgroundColor3 = Box.BackgroundColor3
+				SVSquare.BorderSizePixel = 0
+				SVSquare.Parent = Picker
 
-				local GSlider = RSlider:Clone()
-				GSlider.Position = UDim2.new(0, 5, 0, 30)
-				GSlider.Text = tostring(math.floor(Box.BackgroundColor3.G * 255))
-				GSlider.PlaceholderText = "Green (0-255)"
-				GSlider.Parent = Picker
+				local SatGradient = Instance.new("UIGradient")
+				SatGradient.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(255, 255, 255))
+				SatGradient.Transparency = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 0),
+					NumberSequenceKeypoint.new(1, 1)
+				})
+				SatGradient.Parent = SVSquare -- Horizontal (White -> Trans)
 
-				local BSlider = RSlider:Clone()
-				BSlider.Position = UDim2.new(0, 5, 0, 55)
-				BSlider.Text = tostring(math.floor(Box.BackgroundColor3.B * 255))
-				BSlider.PlaceholderText = "Blue (0-255)"
-				BSlider.Parent = Picker
+				-- We need another overlay for Value (Trans -> Black)
+				local VOverlay = Instance.new("Frame")
+				VOverlay.Size = UDim2.new(1, 0, 1, 0)
+				VOverlay.BackgroundTransparency = 0
+				VOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+				VOverlay.BorderSizePixel = 0
+				VOverlay.Parent = SVSquare
 
-				local ASlider = RSlider:Clone()
-				ASlider.Position = UDim2.new(0, 5, 0, 80)
-				ASlider.Text = "100"
-				ASlider.PlaceholderText = "Alpha (0-100)"
-				ASlider.Parent = Picker
+				local ValGradient = Instance.new("UIGradient")
+				ValGradient.Rotation = 90
+				ValGradient.Color = ColorSequence.new(Color3.fromRGB(0, 0, 0), Color3.fromRGB(0, 0, 0))
+				ValGradient.Transparency = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 1),
+					NumberSequenceKeypoint.new(1, 0)
+				})
+				ValGradient.Parent = VOverlay
 
-				local Preview = Instance.new("Frame")
-				Preview.Size = UDim2.new(1, -10, 0, 30)
-				Preview.Position = UDim2.new(0, 5, 0, 110)
-				Preview.BackgroundColor3 = Box.BackgroundColor3
-				Preview.BorderSizePixel = 0
-				Preview.Parent = Picker
+				local SVPointer = Instance.new("Frame")
+				SVPointer.Size = UDim2.new(0, 4, 0, 4)
+				SVPointer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				SVPointer.BorderSizePixel = 0
+				SVPointer.Parent = SVSquare
+
+				local SVStroke = Instance.new("UIStroke")
+				SVStroke.Color = Color3.fromRGB(0, 0, 0)
+				SVStroke.Parent = SVPointer
+
+				-- Hue Slider
+				local HueSlider = Instance.new("Frame")
+				HueSlider.Size = UDim2.new(0, 12, 0, 140)
+				HueSlider.Position = UDim2.new(0, 160, 0, 10)
+				HueSlider.BorderSizePixel = 0
+				HueSlider.Parent = Picker
+
+				local HueGradient = Instance.new("UIGradient")
+				HueGradient.Rotation = 90
+				HueGradient.Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 1, 1)),
+					ColorSequenceKeypoint.new(0.16, Color3.fromHSV(0.16, 1, 1)),
+					ColorSequenceKeypoint.new(0.33, Color3.fromHSV(0.33, 1, 1)),
+					ColorSequenceKeypoint.new(0.5, Color3.fromHSV(0.5, 1, 1)),
+					ColorSequenceKeypoint.new(0.66, Color3.fromHSV(0.66, 1, 1)),
+					ColorSequenceKeypoint.new(0.83, Color3.fromHSV(0.83, 1, 1)),
+					ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1))
+				})
+				HueGradient.Parent = HueSlider
+
+				local HuePointer = Instance.new("Frame")
+				HuePointer.Size = UDim2.new(1, 4, 0, 2)
+				HuePointer.Position = UDim2.new(-0, -2, 0, 0)
+				HuePointer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				HuePointer.BorderSizePixel = 0
+				HuePointer.Parent = HueSlider
+
+				-- Alpha Slider
+				local AlphaSlider = Instance.new("Frame")
+				AlphaSlider.Size = UDim2.new(0, 140, 0, 12)
+				AlphaSlider.Position = UDim2.new(0, 10, 0, 160)
+				AlphaSlider.BackgroundColor3 = Color3.fromRGB(220, 40, 40)
+				AlphaSlider.BorderSizePixel = 0
+				AlphaSlider.Parent = Picker
+
+				local AlphaGradient = Instance.new("UIGradient")
+				AlphaGradient.Transparency = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 0),
+					NumberSequenceKeypoint.new(1, 1)
+				})
+				AlphaGradient.Parent = AlphaSlider
+
+				local AlphaPointer = Instance.new("Frame")
+				AlphaPointer.Size = UDim2.new(0, 2, 1, 4)
+				AlphaPointer.Position = UDim2.new(0, 0, 0, -2)
+				AlphaPointer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				AlphaPointer.BorderSizePixel = 0
+				AlphaPointer.Parent = AlphaSlider
+
+				-- Inputs
+				local RInput = Instance.new("TextBox")
+				RInput.Size = UDim2.new(0, 35, 0, 15)
+				RInput.Position = UDim2.new(0, 10, 0, 180)
+				RInput.BackgroundColor3 = Color3.fromRGB(30,30,30)
+				RInput.TextColor3 = Color3.fromRGB(200,200,200)
+				RInput.Font = Enum.Font.Code
+				RInput.TextSize = 10
+				RInput.Text = "255"
+				RInput.Parent = Picker
+
+				local GInput = RInput:Clone()
+				GInput.Position = UDim2.new(0, 50, 0, 180)
+				GInput.Text = "255"
+				GInput.Parent = Picker
+
+				local BInput = RInput:Clone()
+				BInput.Position = UDim2.new(0, 90, 0, 180)
+				BInput.Text = "255"
+				BInput.Parent = Picker
+
+				local AInput = RInput:Clone()
+				AInput.Position = UDim2.new(0, 130, 0, 180)
+				AInput.Text = "100"
+				AInput.Parent = Picker
+
+				local H, S, V = Box.BackgroundColor3:ToHSV()
+				local Alpha = 1
 
 				local function Update()
-					local r = tonumber(RSlider.Text) or 255
-					local g = tonumber(GSlider.Text) or 255
-					local b = tonumber(BSlider.Text) or 255
-					local a = tonumber(ASlider.Text) or 100
-					local col = Color3.fromRGB(r, g, b)
-					local alpha = a / 100
-					Preview.BackgroundColor3 = col
-					Preview.BackgroundTransparency = 1 - alpha
-					Box.BackgroundColor3 = col
-					Box.BackgroundTransparency = 1 - alpha
-					callback(col, alpha)
+					local Color = Color3.fromHSV(H, S, V)
+					SVSquare.BackgroundColor3 = Color3.fromHSV(H, 1, 1)
+					Box.BackgroundColor3 = Color
+					Box.BackgroundTransparency = 1 - Alpha
+					
+					RInput.Text = math.floor(Color.R * 255)
+					GInput.Text = math.floor(Color.G * 255)
+					BInput.Text = math.floor(Color.B * 255)
+					AInput.Text = math.floor(Alpha * 100)
+					
+					AlphaSlider.BackgroundColor3 = Color
+					callback(Color, Alpha)
 				end
 
-				RSlider.FocusLost:Connect(Update)
-				GSlider.FocusLost:Connect(Update)
-				BSlider.FocusLost:Connect(Update)
-				ASlider.FocusLost:Connect(Update)
+				local function UpdateSV(input)
+					local PosX = math.clamp((input.Position.X - SVSquare.AbsolutePosition.X) / SVSquare.AbsoluteSize.X, 0, 1)
+					local PosY = math.clamp((input.Position.Y - SVSquare.AbsolutePosition.Y) / SVSquare.AbsoluteSize.Y, 0, 1)
+					S = PosX
+					V = 1 - PosY
+					SVPointer.Position = UDim2.new(PosX, -2, PosY, -2)
+					Update()
+				end
 
-				Box.MouseEnter:Connect(function() Library.CanDrag = false end)
-				Box.MouseLeave:Connect(function() Library.CanDrag = true end)
+				local function UpdateHue(input)
+					local PosY = math.clamp((input.Position.Y - HueSlider.AbsolutePosition.Y) / HueSlider.AbsoluteSize.Y, 0, 1)
+					H = 1 - PosY
+					HuePointer.Position = UDim2.new(0, -2, PosY, -1)
+					Update()
+				end
 
-				RSlider.MouseEnter:Connect(function() Library.CanDrag = false end)
-				RSlider.MouseLeave:Connect(function() Library.CanDrag = true end)
-				GSlider.MouseEnter:Connect(function() Library.CanDrag = false end)
-				GSlider.MouseLeave:Connect(function() Library.CanDrag = true end)
-				BSlider.MouseEnter:Connect(function() Library.CanDrag = false end)
-				BSlider.MouseLeave:Connect(function() Library.CanDrag = true end)
-				ASlider.MouseEnter:Connect(function() Library.CanDrag = false end)
-				ASlider.MouseLeave:Connect(function() Library.CanDrag = true end)
+				local function UpdateAlpha(input)
+					local PosX = math.clamp((input.Position.X - AlphaSlider.AbsolutePosition.X) / AlphaSlider.AbsoluteSize.X, 0, 1)
+					Alpha = 1 - PosX
+					AlphaPointer.Position = UDim2.new(PosX, -1, 0, -2)
+					Update()
+				end
+
+				-- Dragging Logic
+				local SVDragging = false
+				SVSquare.InputBegan:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseButton1 then
+						SVDragging = true
+						UpdateSV(input)
+					end
+				end)
+
+				local HueDragging = false
+				HueSlider.InputBegan:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseButton1 then
+						HueDragging = true
+						UpdateHue(input)
+					end
+				end)
+
+				local AlphaDragging = false
+				AlphaSlider.InputBegan:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseButton1 then
+						AlphaDragging = true
+						UpdateAlpha(input)
+					end
+				end)
+
+				UserInputService.InputChanged:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseMovement then
+						if SVDragging then UpdateSV(input) end
+						if HueDragging then UpdateHue(input) end
+						if AlphaDragging then UpdateAlpha(input) end
+					end
+				end)
+
+				UserInputService.InputEnded:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseButton1 then
+						SVDragging = false
+						HueDragging = false
+						AlphaDragging = false
+					end
+				end)
+
+				-- Connect safety lock
+				Picker.MouseEnter:Connect(function() Library.CanDrag = false end)
+				Picker.MouseLeave:Connect(function() Library.CanDrag = true end)
 
 				Box.MouseButton1Click:Connect(function()
-					Picker.Position = UDim2.new(0, Box.AbsolutePosition.X - 160, 0, Box.AbsolutePosition.Y)
+					Picker.Position = UDim2.new(0, Box.AbsolutePosition.X - 190, 0, Box.AbsolutePosition.Y)
 					Picker.Visible = not Picker.Visible
 				end)
+				
+				Update()
 			end
 
 			function Sector:CreateKeybind(name, default, callback)
