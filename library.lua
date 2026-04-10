@@ -32,7 +32,6 @@ function Library:MakeDraggable(frame)
 
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            -- We will check if the user is hovering over a non-draggable element in the future (like sliders)
             dragging = true
             mousePos = input.Position
             framePos = frame.Position
@@ -69,10 +68,25 @@ function Library:CreateWindow(name)
     MainFrame.Name = "MainFrame"
     MainFrame.Size = UDim2.new(0, 600, 0, 450)
     MainFrame.Position = UDim2.new(0.5, -300, 0.5, -225)
-    MainFrame.BackgroundColor3 = Theme.Background
-    MainFrame.BorderSizePixel = 1
-    MainFrame.BorderColor3 = Theme.Border
+    MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10) -- Outer border color
+    MainFrame.BorderSizePixel = 0
     MainFrame.Parent = ScreenGui
+
+    local InnerFrame = Instance.new("Frame")
+    InnerFrame.Name = "InnerFrame"
+    InnerFrame.Size = UDim2.new(1, -2, 1, -2)
+    InnerFrame.Position = UDim2.new(0, 1, 0, 1)
+    InnerFrame.BackgroundColor3 = Theme.Border -- Middle border color
+    InnerFrame.BorderSizePixel = 0
+    InnerFrame.Parent = MainFrame
+
+    local MainBg = Instance.new("Frame")
+    MainBg.Name = "MainBg"
+    MainBg.Size = UDim2.new(1, -2, 1, -2)
+    MainBg.Position = UDim2.new(0, 1, 0, 1)
+    MainBg.BackgroundColor3 = Theme.Background
+    MainBg.BorderSizePixel = 0
+    MainBg.Parent = InnerFrame
 
     Library:MakeDraggable(MainFrame)
 
@@ -82,7 +96,7 @@ function Library:CreateWindow(name)
     Sidebar.Size = UDim2.new(0, 120, 1, 0)
     Sidebar.BackgroundColor3 = Theme.SidebarBackground
     Sidebar.BorderSizePixel = 0
-    Sidebar.Parent = MainFrame
+    Sidebar.Parent = MainBg
 
     local SidebarBorder = Instance.new("Frame")
     SidebarBorder.Size = UDim2.new(0, 1, 1, 0)
@@ -91,14 +105,24 @@ function Library:CreateWindow(name)
     SidebarBorder.BorderSizePixel = 0
     SidebarBorder.Parent = Sidebar
 
+    -- Tab Divider (The box around the tabs)
+    local TabDivider = Instance.new("Frame")
+    TabDivider.Name = "TabDivider"
+    TabDivider.Size = UDim2.new(1, -20, 1, -40)
+    TabDivider.Position = UDim2.new(0, 10, 0, 10)
+    TabDivider.BackgroundColor3 = Theme.SidebarBackground
+    TabDivider.BorderColor3 = Theme.Border
+    TabDivider.BorderSizePixel = 1
+    TabDivider.Parent = Sidebar
+
     local TabContainer = Instance.new("ScrollingFrame")
     TabContainer.Name = "TabContainer"
-    TabContainer.Size = UDim2.new(1, -10, 1, -20)
-    TabContainer.Position = UDim2.new(0, 5, 0, 10)
+    TabContainer.Size = UDim2.new(1, -10, 1, -10)
+    TabContainer.Position = UDim2.new(0, 5, 0, 5)
     TabContainer.BackgroundTransparency = 1
     TabContainer.BorderSizePixel = 0
     TabContainer.ScrollBarThickness = 0
-    TabContainer.Parent = Sidebar
+    TabContainer.Parent = TabDivider
 
     local TabListLayout = Instance.new("UIListLayout")
     TabListLayout.Padding = UDim.new(0, 5)
@@ -110,7 +134,7 @@ function Library:CreateWindow(name)
     ContentHolder.Size = UDim2.new(1, -130, 1, -40)
     ContentHolder.Position = UDim2.new(0, 125, 0, 10)
     ContentHolder.BackgroundTransparency = 1
-    ContentHolder.Parent = MainFrame
+    ContentHolder.Parent = MainBg
 
     -- Footer
     local Footer = Instance.new("Frame")
@@ -118,7 +142,7 @@ function Library:CreateWindow(name)
     Footer.Size = UDim2.new(1, -120, 0, 25)
     Footer.Position = UDim2.new(0, 120, 1, -25)
     Footer.BackgroundTransparency = 1
-    Footer.Parent = MainFrame
+    Footer.Parent = MainBg
 
     local FooterText = Instance.new("TextLabel")
     FooterText.Size = UDim2.new(1, -10, 1, 0)
@@ -229,7 +253,6 @@ function Library:CreateWindow(name)
             SectionTitle.Font = Enum.Font.Code
             SectionTitle.TextSize = 13
             SectionTitle.TextColor3 = Theme.Text
-            SectionTitle.SizeToContents = true -- Not a real property, but we'll manually set width
             SectionTitle.Parent = SectionFrame
             
             -- Simple text size adjustment for the title
