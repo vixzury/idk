@@ -16,7 +16,7 @@ local function MakeDraggable(topbarobject, object)
 	topbarobject.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			-- Fix: Check if we're clicking an interactive element
-			local objects = game:GetService("GuiService"):GetGuiObjectsAtPosition(input.Position.X, input.Position.Y)
+			local objects = LocalPlayer:WaitForChild("PlayerGui"):GetGuiObjectsAtPosition(input.Position.X, input.Position.Y)
 			local interactive = false
 			for _, v in pairs(objects) do
 				if v:IsA("TextButton") or v:IsA("ScrollingFrame") or v.Name:find("Slider") or v.Name:find("Colorpicker") then
