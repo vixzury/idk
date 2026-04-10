@@ -61,7 +61,7 @@ function library:CreateWindow(title)
 	local TabListLayout = Instance.new("UIListLayout")
 	TabListLayout.Parent = TabList
 	TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	TabListLayout.Padding = UDim3.new(0, 5)
+	TabListLayout.Padding = UDim.new(0, 5)
 
 	-- Divider
 	local Divider = Instance.new("Frame")
@@ -138,7 +138,7 @@ function library:CreateWindow(title)
 		local TabFrameLayout = Instance.new("UIListLayout")
 		TabFrameLayout.Parent = TabFrame
 		TabFrameLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		TabFrameLayout.Padding = UDim2.new(0, 10)
+		TabFrameLayout.Padding = UDim.new(0, 10)
 
 		tab.Frame = TabFrame
 
