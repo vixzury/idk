@@ -71,9 +71,9 @@ function Library:CreateWindow(name)
     local Window = {CurrentTab = nil}
     function Window:CreateTab(name)
         local TabBtn = Instance.new("TextButton", TabContainer)
-        TabBtn.Size = UDim2.new(1,0,0,30) TabBtn.BackgroundTransparency = 1 TabBtn.Text = ""
+        TabBtn.Size = UDim2.new(1,0,0,42) TabBtn.BackgroundTransparency = 1 TabBtn.Text = ""
         local TabLabel = Instance.new("TextLabel", TabBtn)
-        TabLabel.Size = UDim2.new(1,0,1,0) TabLabel.BackgroundTransparency = 1 TabLabel.Text = name:upper() TabLabel.TextColor3 = Color3.fromRGB(180,180,180) TabLabel.TextSize = 14 TabLabel.Font = Enum.Font.GothamBold TabLabel.TextXAlignment = Enum.TextXAlignment.Left
+        TabLabel.Size = UDim2.new(1,0,1,0) TabLabel.BackgroundTransparency = 1 TabLabel.Text = name:upper() TabLabel.TextColor3 = Color3.fromRGB(180,180,180) TabLabel.TextSize = 20 TabLabel.Font = Enum.Font.GothamBold TabLabel.TextXAlignment = Enum.TextXAlignment.Left
 
         local Page = Instance.new("Frame", ContentArea)
         Page.Size = UDim2.new(1,0,1,0) Page.BackgroundTransparency = 1 Page.Visible = false
