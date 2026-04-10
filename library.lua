@@ -52,26 +52,32 @@ function Library:CreateWindow(name)
 	GUI.Parent = (RunService:IsStudio() and LocalPlayer:WaitForChild("PlayerGui") or game:GetService("CoreGui"))
 	GUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
+	local MainOutline = Instance.new("Frame")
+	MainOutline.Name = "MainOutline"
+	MainOutline.Size = UDim2.new(0, 552, 0, 452)
+	MainOutline.Position = UDim2.new(0.5, -276, 0.5, -226)
+	MainOutline.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+	MainOutline.BorderSizePixel = 0
+	MainOutline.Parent = GUI
+
+	local MainInline = Instance.new("Frame")
+	MainInline.Name = "MainInline"
+	MainInline.Size = UDim2.new(1, -2, 1, -2)
+	MainInline.Position = UDim2.new(0, 1, 0, 1)
+	MainInline.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+	MainInline.BorderSizePixel = 0
+	MainInline.Parent = MainOutline
+
 	local Main = Instance.new("Frame")
 	Main.Name = "Main"
-	Main.Size = UDim2.new(0, 550, 0, 450)
-	Main.Position = UDim2.new(0.5, -275, 0.5, -225)
-	Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	Main.Size = UDim2.new(1, -2, 1, -2)
+	Main.Position = UDim2.new(0, 1, 0, 1)
+	Main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	Main.BorderSizePixel = 0
-	Main.Parent = GUI
+	Main.Parent = MainInline
 
-	local MainBorder = Instance.new("UIStroke")
-	MainBorder.Color = Color3.fromRGB(45, 45, 45)
-	MainBorder.Thickness = 1
-	MainBorder.Parent = Main
-
-	-- Simple title or drag area if needed
-	local DragArea = Instance.new("Frame")
-	DragArea.Name = "DragArea"
-	DragArea.Size = UDim2.new(1, 0, 0, 5)
-	DragArea.BackgroundTransparency = 1
-	DragArea.Parent = Main
-	MakeDraggable(DragArea, Main)
+	-- Make entire menu draggable
+	MakeDraggable(Main, MainOutline)
 
 	local Sidebar = Instance.new("Frame")
 	Sidebar.Name = "Sidebar"
@@ -238,7 +244,7 @@ function Library:CreateWindow(name)
 				Label.TextColor3 = Color3.fromRGB(180, 180, 180)
 				Label.Font = Enum.Font.Code
 				Label.TextSize = 12
-				Label.XAlignment = Enum.TextXAlignment.Left
+				Label.TextXAlignment = Enum.TextXAlignment.Left
 				Label.Parent = Checkbox
 
 				local Enabled = default or false
@@ -269,7 +275,7 @@ function Library:CreateWindow(name)
 				Label.TextColor3 = Color3.fromRGB(180, 180, 180)
 				Label.Font = Enum.Font.Code
 				Label.TextSize = 12
-				Label.XAlignment = Enum.TextXAlignment.Left
+				Label.TextXAlignment = Enum.TextXAlignment.Left
 				Label.Parent = Slider
 
 				local Tray = Instance.new("Frame")
@@ -340,7 +346,7 @@ function Library:CreateWindow(name)
 				Label.TextColor3 = Color3.fromRGB(180, 180, 180)
 				Label.Font = Enum.Font.Code
 				Label.TextSize = 12
-				Label.XAlignment = Enum.TextXAlignment.Left
+				Label.TextXAlignment = Enum.TextXAlignment.Left
 				Label.Parent = Dropdown
 
 				local Button = Instance.new("TextButton")
@@ -409,7 +415,7 @@ function Library:CreateWindow(name)
 				Label.TextColor3 = Color3.fromRGB(180, 180, 180)
 				Label.Font = Enum.Font.Code
 				Label.TextSize = 12
-				Label.XAlignment = Enum.TextXAlignment.Left
+				Label.TextXAlignment = Enum.TextXAlignment.Left
 				Label.Parent = Colorpicker
 
 				local Box = Instance.new("TextButton")
