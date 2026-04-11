@@ -10,7 +10,10 @@ local Library = {
 	Dark = Color3.fromRGB(12, 12, 12),
 	OpenPopups = {},
 	Flags = {},
-	Registry = {} -- To store update functions for loading
+	Registry = {},
+	Connections = {},
+	BindCallbacks = {},
+	Unloaded = false,
 }
 
 local HttpService = game:GetService("HttpService")
@@ -85,6 +88,47 @@ function Library:ClosePopups()
 	Library.OpenPopups = {}
 end
 
+function Library:Connect(signal, fn)
+	local conn = signal:Connect(fn)
+	table.insert(Library.Connections, conn)
+	return conn
+end
+
+function Library:Unload()
+	Library.Unloaded = true
+	for _, conn in pairs(Library.Connections) do
+		pcall(function() conn:Disconnect() end)
+	end
+	Library.Connections = {}
+	if Library.GUI then
+		Library.GUI:Destroy()
+		Library.GUI = nil
+	end
+	Library.Flags = {}
+	Library.Registry = {}
+	Library.BindCallbacks = {}
+end
+
+function Library:IsBindActive(bindFlag)
+	local cb = Library.BindCallbacks[bindFlag]
+	if not cb then return false end
+	local mode = cb.getMode()
+	if mode == "Always" then return true end
+	return cb.isActive()
+end
+
+function Library:IsActive(toggleFlag, bindFlag)
+	if not Library.Flags[toggleFlag] then return false end
+	if not bindFlag then return true end
+	local cb = Library.BindCallbacks[bindFlag]
+	if not cb then return true end
+	local key = cb.getKey()
+	if not key then return true end
+	local mode = cb.getMode()
+	if mode == "Always" then return true end
+	return cb.isActive()
+end
+
 -- [[ Utility: Draggable ]]
 local function MakeDraggable(dragframe, mainobject)
 	local dragging, dragInput, dragStart, startPos
@@ -124,7 +168,7 @@ function Library:CreateWindow(name)
 	MainOutline.BorderSizePixel = 0
 	MainOutline.Parent = GUI
 
-	UserInputService.InputBegan:Connect(function(input)
+	Library:Connect(UserInputService.InputBegan, function(input)
 		if input.KeyCode == Library.ToggleKey or input.KeyCode == Enum.KeyCode.Insert then
 			MainOutline.Visible = not MainOutline.Visible
 		end
@@ -519,7 +563,28 @@ function Library:CreateWindow(name)
 					table.insert(Library.OpenPopups, ModeFrame)
 				end)
 
-				UserInputService.InputBegan:Connect(function(input)
+				-- Track bind state for activation
+				local bindActive = false
+				if flag then
+					Library.BindCallbacks[flag] = {
+						getKey = function() return currentKey end,
+						getMode = function() return currentMode end,
+						isActive = function() return bindActive end,
+					}
+				end
+
+				local function matchesInput(input)
+					if not currentKey then return false end
+					if input.UserInputType == Enum.UserInputType.Keyboard then
+						return input.KeyCode == currentKey
+					else
+						return input.UserInputType == currentKey
+					end
+				end
+
+				Library:Connect(UserInputService.InputBegan, function(input, gameProcessed)
+					if Library.Unloaded then return end
+					-- Handle rebind listening
 					if listening then
 						if input.UserInputType == Enum.UserInputType.Keyboard then
 							if input.KeyCode == Enum.KeyCode.Escape then
@@ -529,7 +594,7 @@ function Library:CreateWindow(name)
 								currentKey = input.KeyCode
 								listening = false
 							end
-						elseif input.UserInputType:IsA("UserInputType") and input.UserInputType.Name:find("MouseButton") then
+						elseif input.UserInputType.Name:find("MouseButton") then
 							currentKey = input.UserInputType
 							listening = false
 						end
@@ -537,6 +602,24 @@ function Library:CreateWindow(name)
 							BindButton.Text = "[" .. (currentKey and currentKey.Name:gsub("MouseButton", "MB") or "NONE") .. "]"
 							updateFlag()
 						end
+						return
+					end
+
+					if gameProcessed then return end
+					if not currentKey or not matchesInput(input) then return end
+
+					if currentMode == "Toggle" then
+						bindActive = not bindActive
+					elseif currentMode == "Hold" then
+						bindActive = true
+					end
+				end)
+
+				Library:Connect(UserInputService.InputEnded, function(input)
+					if Library.Unloaded then return end
+					if not currentKey or not matchesInput(input) then return end
+					if currentMode == "Hold" then
+						bindActive = false
 					end
 				end)
 
