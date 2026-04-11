@@ -1,4 +1,4 @@
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/username/repo/main/lib.lua"))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/vixzury/idk/refs/heads/main/lib.luau"))()
 
 local Window = Library:CreateWindow("SUPREMACY")
 local Aimbot = Window:CreateTab("aimbot")
