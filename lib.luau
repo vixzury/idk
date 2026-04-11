@@ -21,17 +21,40 @@ if not isfolder("Supremacy") then makefolder("Supremacy") end
 if not isfolder("Supremacy/Configs") then makefolder("Supremacy/Configs") end
 
 function Library:SaveConfig(name)
-	local str = HttpService:JSONEncode(Library.Flags)
-	writefile("Supremacy/Configs/" .. name .. ".json", str)
+	local data = {}
+	for flag, value in pairs(Library.Flags) do
+		if Library.Registry[flag] then
+			local t = type(value)
+			if t == "boolean" or t == "string" or t == "number" then
+				data[flag] = value
+			elseif t == "table" then
+				-- keybind {Key="E", Mode="Toggle"} or colorpicker {h,s,v} or dropdown {"a","b"}
+				local ok, encoded = pcall(HttpService.JSONEncode, HttpService, value)
+				if ok then data[flag] = value end
+			end
+			-- skip anything else (Color3, Enum, Instance, etc.)
+		end
+	end
+	local ok, str = pcall(HttpService.JSONEncode, HttpService, data)
+	if ok then
+		writefile("Supremacy/Configs/" .. name .. ".json", str)
+	end
 end
 
 function Library:LoadConfig(name)
-	if isfile("Supremacy/Configs/" .. name .. ".json") then
-		local data = HttpService:JSONDecode(readfile("Supremacy/Configs/" .. name .. ".json"))
-		for i, v in pairs(data) do
-			if Library.Registry[i] then
-				Library.Registry[i](v)
+	if not isfile("Supremacy/Configs/" .. name .. ".json") then return end
+	local raw = readfile("Supremacy/Configs/" .. name .. ".json")
+	local ok, data = pcall(HttpService.JSONDecode, HttpService, raw)
+	if not ok or type(data) ~= "table" then return end
+	for flag, value in pairs(data) do
+		if Library.Registry[flag] then
+			local success, err = pcall(Library.Registry[flag], value)
+			if not success then
+				warn("[Supremacy] Failed to load flag '" .. tostring(flag) .. "': " .. tostring(err))
 			end
+		else
+			-- flag exists in config but not in UI, still set it
+			Library.Flags[flag] = value
 		end
 	end
 end
@@ -624,19 +647,25 @@ function Library:CreateWindow(name)
 				end)
 
 				if flag then
-					Library.Registry[flag] = function(data)
-						if data.Key then
+				Library.Registry[flag] = function(data)
+					if type(data) ~= "table" then return end
+					if data.Key and data.Key ~= "NONE" then
+						local ok, key = pcall(function()
 							if data.Key:find("MB") or data.Key:find("MouseButton") then
-								currentKey = Enum.UserInputType[data.Key:gsub("MB", "MouseButton")]
+								return Enum.UserInputType[data.Key:gsub("MB", "MouseButton")]
 							else
-								currentKey = Enum.KeyCode[data.Key]
+								return Enum.KeyCode[data.Key]
 							end
-						end
-						currentMode = data.Mode or "Toggle"
-						BindButton.Text = "[" .. (currentKey and currentKey.Name:gsub("MouseButton", "MB") or "NONE") .. "]"
-						setMode(currentMode)
+						end)
+						if ok then currentKey = key end
+					elseif data.Key == "NONE" then
+						currentKey = nil
 					end
+					currentMode = data.Mode or "Toggle"
+					BindButton.Text = "[" .. (currentKey and currentKey.Name:gsub("MouseButton", "MB") or "NONE") .. "]"
+					setMode(currentMode)
 				end
+			end
 			end
 
 			function Sector:CreateDropdown(name, list, default, flag, callback)
@@ -743,9 +772,11 @@ function Library:CreateWindow(name)
 
 				if flag then
 					Library.Registry[flag] = function(v)
-						Selected = v
-						DropdownObj:SetOptions(list)
-						UpdateLabel()
+						if type(v) == "table" then
+							Selected = v
+							DropdownObj:SetOptions(list)
+							UpdateLabel()
+						end
 					end
 				end
 
@@ -850,8 +881,10 @@ function Library:CreateWindow(name)
 
 				if flag then
 					Library.Registry[flag] = function(v)
-						curH, curS, curV = v[1], v[2], v[3]
-						updateColor()
+						if type(v) == "table" and type(v[1]) == "number" then
+							curH, curS, curV = v[1], v[2] or 1, v[3] or 1
+							updateColor()
+						end
 					end
 				end
 			end
@@ -908,7 +941,11 @@ function Library:CreateWindow(name)
 				if flag then Library.Flags[flag] = val end
 
 				local function set(v)
-					val = v
+					if type(v) == "number" then
+						val = math.clamp(math.floor(v), min, max)
+					else
+						val = default
+					end
 					local delta = (val - min) / (max - min)
 					Bar.Size = UDim2.new(delta, 0, 1, 0)
 					ValueLabel.Text = tostring(val) .. (unit or "")
