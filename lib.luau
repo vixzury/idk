@@ -1,4 +1,3 @@
-
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
@@ -90,7 +89,6 @@ function Library:CreateWindow(name)
 
 	MakeDraggable(Main, MainOutline)
 
-	-- SIDEBAR
 	local Sidebar = Instance.new("Frame")
 	Sidebar.Name = "Sidebar"
 	Sidebar.Size = UDim2.new(0, 110, 1, -40)
@@ -109,7 +107,6 @@ function Library:CreateWindow(name)
 	SidebarPadding.PaddingLeft = UDim.new(0, 10)
 	SidebarPadding.Parent = Sidebar
 
-	-- CONTAINER Area
 	local Container = Instance.new("Frame")
 	Container.Name = "Container"
 	Container.Size = UDim2.new(1, -155, 1, -40)
@@ -264,6 +261,176 @@ function Library:CreateWindow(name)
 					enabled = not enabled
 					Inner.Visible = enabled
 					if callback then callback(enabled) end
+				end)
+			end
+
+			function Sector:CreateCombo(name, list, default, callback)
+				local Combo = Instance.new("Frame")
+				Combo.Size = UDim2.new(1, 0, 0, 32)
+				Combo.BackgroundTransparency = 1
+				Combo.Parent = Content
+				local Label = Instance.new("TextLabel")
+				Label.Size = UDim2.new(1, 0, 0, 13)
+				Label.BackgroundTransparency = 1
+				Label.Text = name:lower()
+				Label.TextColor3 = Color3.fromRGB(180, 180, 180)
+				Label.Font = Enum.Font.Code
+				Label.TextSize = 13
+				Label.TextXAlignment = Enum.TextXAlignment.Left
+				Label.Parent = Combo
+				local Button = Instance.new("TextButton")
+				Button.Size = UDim2.new(1, 0, 0, 16)
+				Button.Position = UDim2.fromOffset(0, 15)
+				Button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+				Button.BorderSizePixel = 0
+				Button.Text = "  " .. (default or "none")
+				Button.TextColor3 = Color3.fromRGB(200, 200, 200)
+				Button.Font = Enum.Font.Code
+				Button.TextSize = 12
+				Button.TextXAlignment = Enum.TextXAlignment.Left
+				Button.Parent = Combo
+				local Arrow = Instance.new("TextLabel")
+				Arrow.Size = UDim2.fromOffset(16, 16)
+				Arrow.Position = UDim2.new(1, -16, 0, 0)
+				Arrow.BackgroundTransparency = 1
+				Arrow.Text = "\226\150\188"
+				Arrow.TextColor3 = Color3.fromRGB(150, 150, 150)
+				Arrow.TextSize = 8
+				Arrow.Parent = Button
+				local ListFrame = Instance.new("Frame")
+				ListFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+				ListFrame.BorderSizePixel = 1
+				ListFrame.Visible = false
+				ListFrame.ZIndex = 1200
+				ListFrame.Parent = Overlay
+				local ListLayout = Instance.new("UIListLayout")
+				ListLayout.Parent = ListFrame
+				local Selected = default
+				for _, v in pairs(list) do
+					local Item = Instance.new("TextButton")
+					Item.Size = UDim2.new(1, 0, 0, 18)
+					Item.BackgroundTransparency = 1
+					Item.Text = "  " .. v:lower()
+					Item.TextColor3 = (Selected == v) and Library.Accent or Color3.fromRGB(180, 180, 180)
+					Item.Font = Enum.Font.Code
+					Item.TextSize = 12
+					Item.TextXAlignment = Enum.TextXAlignment.Left
+					Item.ZIndex = 1201
+					Item.Parent = ListFrame
+					Item.MouseButton1Click:Connect(function()
+						Selected = v
+						Button.Text = "  " .. v:lower()
+						ListFrame.Visible = false
+						if callback then callback(v) end
+						for _, it in pairs(ListFrame:GetChildren()) do
+							if it:IsA("TextButton") then it.TextColor3 = (it.Text:find(v:lower()) and Library.Accent or Color3.fromRGB(180, 180, 180)) end
+						end
+					end)
+				end
+				Button.MouseButton1Click:Connect(function()
+					if ListFrame.Visible then ListFrame.Visible = false else
+						Library:ClosePopups()
+						ListFrame.Position = UDim2.fromOffset(Button.AbsolutePosition.X, Button.AbsolutePosition.Y + Button.AbsoluteSize.Y + 1)
+						ListFrame.Size = UDim2.fromOffset(Button.AbsoluteSize.X, #list * 18)
+						ListFrame.Visible = true
+						table.insert(Library.OpenPopups, ListFrame)
+					end
+				end)
+			end
+
+			function Sector:CreateKeybind(name, default, callback)
+				local Keybind = Instance.new("Frame")
+				Keybind.Size = UDim2.new(1, 0, 0, 15)
+				Keybind.BackgroundTransparency = 1
+				Keybind.Parent = Content
+				local Label = Instance.new("TextLabel")
+				Label.Size = UDim2.new(1, 0, 1, 0)
+				Label.BackgroundTransparency = 1
+				Label.Text = name:lower()
+				Label.TextColor3 = Color3.fromRGB(180, 180, 180)
+				Label.Font = Enum.Font.Code
+				Label.TextSize = 13
+				Label.TextXAlignment = Enum.TextXAlignment.Left
+				Label.Parent = Keybind
+				local BindButton = Instance.new("TextButton")
+				BindButton.Size = UDim2.new(0, 0, 1, 0)
+				BindButton.AutomaticSize = Enum.AutomaticSize.X
+				BindButton.Position = UDim2.new(1, 0, 0, 0)
+				BindButton.AnchorPoint = Vector2.new(1, 0)
+				BindButton.BackgroundTransparency = 1
+				local currentKey = default
+				local currentMode = "Toggle"
+				BindButton.Text = "[" .. (currentKey and currentKey.Name:gsub("MouseButton", "MB") or "NONE") .. "]"
+				BindButton.TextColor3 = Color3.fromRGB(120, 120, 120)
+				BindButton.Font = Enum.Font.Code
+				BindButton.TextSize = 12
+				BindButton.TextXAlignment = Enum.TextXAlignment.Right
+				BindButton.Parent = Keybind
+
+				local ModeFrame = Instance.new("Frame")
+				ModeFrame.Size = UDim2.fromOffset(60, 54)
+				ModeFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+				ModeFrame.BorderSizePixel = 1
+				ModeFrame.Visible = false
+				ModeFrame.ZIndex = 1300
+				ModeFrame.Parent = Overlay
+				local ModeLayout = Instance.new("UIListLayout")
+				ModeLayout.Parent = ModeFrame
+
+				local function setMode(m)
+					currentMode = m
+					ModeFrame.Visible = false
+					if callback then callback({Key = currentKey, Mode = currentMode}) end
+					for _, b in pairs(ModeFrame:GetChildren()) do
+						if b:IsA("TextButton") then b.TextColor3 = (b.Text:lower() == m:lower() and Library.Accent or Color3.fromRGB(180, 180, 180)) end
+					end
+				end
+
+				for _, m in pairs({"Always", "Toggle", "Hold"}) do
+					local b = Instance.new("TextButton")
+					b.Size = UDim2.new(1, 0, 0, 18)
+					b.BackgroundTransparency = 1
+					b.Text = m
+					b.TextColor3 = (m == currentMode and Library.Accent or Color3.fromRGB(180, 180, 180))
+					b.Font = Enum.Font.Code
+					b.TextSize = 12
+					b.ZIndex = 1301
+					b.Parent = ModeFrame
+					b.MouseButton1Click:Connect(function() setMode(m) end)
+				end
+
+				local listening = false
+				BindButton.MouseButton1Click:Connect(function()
+					listening = true
+					BindButton.Text = "[...]"
+				end)
+
+				BindButton.MouseButton2Click:Connect(function()
+					Library:ClosePopups()
+					ModeFrame.Position = UDim2.fromOffset(BindButton.AbsolutePosition.X - 65, BindButton.AbsolutePosition.Y)
+					ModeFrame.Visible = true
+					table.insert(Library.OpenPopups, ModeFrame)
+				end)
+
+				UserInputService.InputBegan:Connect(function(input)
+					if listening then
+						if input.UserInputType == Enum.UserInputType.Keyboard then
+							if input.KeyCode == Enum.KeyCode.Escape then
+								currentKey = nil
+								listening = false
+							elseif input.KeyCode ~= Library.ToggleKey then
+								currentKey = input.KeyCode
+								listening = false
+							end
+						elseif input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 or input.UserInputType == Enum.UserInputType.MouseButton3 then
+							currentKey = input.UserInputType
+							listening = false
+						end
+						if not listening then
+							BindButton.Text = "[" .. (currentKey and currentKey.Name:gsub("MouseButton", "MB") or "NONE") .. "]"
+							if callback then callback({Key = currentKey, Mode = currentMode}) end
+						end
+					end
 				end)
 			end
 
@@ -466,15 +633,19 @@ function Library:CreateWindow(name)
 
 				local Bar = Instance.new("Frame")
 				Bar.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-				Bar.BackgroundColor3 = Library.Accent
+				Bar.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
 				Bar.BorderSizePixel = 0
 				Bar.Parent = Tray
+				local BarGradient = Instance.new("UIGradient")
+				BarGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 180, 180))})
+				BarGradient.Rotation = 90
+				BarGradient.Parent = Bar
 
 				local ValueLabel = Instance.new("TextLabel")
 				ValueLabel.Size = UDim2.new(1, 0, 1, 0)
 				ValueLabel.BackgroundTransparency = 1
 				ValueLabel.Text = tostring(default) .. (unit or "")
-				ValueLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+				ValueLabel.TextColor3 = Color3.fromRGB(60, 60, 60)
 				ValueLabel.Font = Enum.Font.Code
 				ValueLabel.TextSize = 10
 				ValueLabel.ZIndex = 3
