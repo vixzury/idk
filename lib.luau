@@ -1,8 +1,7 @@
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local LocalPlayer = game:GetService("Players").LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
 local CoreGui = game:GetService("CoreGui")
+local LocalPlayer = game:GetService("Players").LocalPlayer
 
 local Library = {
 	ToggleKey = Enum.KeyCode.RightShift,
@@ -11,7 +10,7 @@ local Library = {
 	Dark = Color3.fromRGB(12, 12, 12),
 	OpenPopups = {},
 	Flags = {},
-	Registry = {}
+	Registry = {} -- To store update functions for loading
 }
 
 local HttpService = game:GetService("HttpService")
@@ -25,12 +24,10 @@ end
 
 function Library:LoadConfig(name)
 	if isfile("Supremacy/Configs/" .. name .. ".json") then
-		local status, data = pcall(function() return HttpService:JSONDecode(readfile("Supremacy/Configs/" .. name .. ".json")) end)
-		if status and data then
-			for i, v in pairs(data) do
-				if Library.Registry[i] then
-					Library.Registry[i](v)
-				end
+		local data = HttpService:JSONDecode(readfile("Supremacy/Configs/" .. name .. ".json"))
+		for i, v in pairs(data) do
+			if Library.Registry[i] then
+				Library.Registry[i](v)
 			end
 		end
 	end
@@ -88,6 +85,30 @@ function Library:ClosePopups()
 	Library.OpenPopups = {}
 end
 
+-- [[ Utility: Draggable ]]
+local function MakeDraggable(dragframe, mainobject)
+	local dragging, dragInput, dragStart, startPos
+	dragframe.InputBegan:Connect(function(input)
+		if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and Library.CanDrag then
+			Library:ClosePopups()
+			dragging = true
+			dragStart = input.Position
+			startPos = mainobject.Position
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local delta = input.Position - dragStart
+			mainobject.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+	UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = false
+		end
+	end)
+end
+
 function Library:CreateWindow(name)
 	local GUI = Instance.new("ScreenGui")
 	GUI.Name = "Supremacy_Final_" .. math.random(1, 1000)
@@ -97,161 +118,172 @@ function Library:CreateWindow(name)
 
 	local MainOutline = Instance.new("Frame")
 	MainOutline.Name = "MainOutline"
-	MainOutline.Size = UDim2.fromOffset(500, 600)
-	MainOutline.Position = UDim2.new(0.5, -250, 0.5, -300)
-	MainOutline.BackgroundColor3 = Library.Dark
+	MainOutline.Size = UDim2.fromOffset(700, 600)
+	MainOutline.Position = UDim2.new(0.5, -350, 0.5, -300)
+	MainOutline.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	MainOutline.BorderSizePixel = 0
 	MainOutline.Parent = GUI
 
-	local MainStroke = Instance.new("UIStroke")
-	MainStroke.Color = Color3.fromRGB(40, 40, 40)
-	MainStroke.Thickness = 1
-	MainStroke.Parent = MainOutline
+	UserInputService.InputBegan:Connect(function(input)
+		if input.KeyCode == Library.ToggleKey or input.KeyCode == Enum.KeyCode.Insert then
+			MainOutline.Visible = not MainOutline.Visible
+		end
+	end)
 
-	local TopBar = Instance.new("Frame")
-	TopBar.Size = UDim2.new(1, 0, 0, 25)
-	TopBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	TopBar.BorderSizePixel = 0
-	TopBar.Parent = MainOutline
+	local MainInline = Instance.new("Frame")
+	MainInline.Size = UDim2.new(1, -2, 1, -2)
+	MainInline.Position = UDim2.fromOffset(1, 1)
+	MainInline.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+	MainInline.BorderSizePixel = 0
+	MainInline.Parent = MainOutline
 
-	local Title = Instance.new("TextLabel")
-	Title.Size = UDim2.new(1, -10, 1, 0)
-	Title.Position = UDim2.fromOffset(10, 0)
-	Title.BackgroundTransparency = 1
-	Title.Text = name:lower()
-	Title.TextColor3 = Color3.fromRGB(200, 200, 200)
-	Title.Font = Enum.Font.Code
-	Title.TextSize = 14
-	Title.TextXAlignment = Enum.TextXAlignment.Left
-	Title.Parent = TopBar
+	local MainInner = Instance.new("Frame")
+	MainInner.Size = UDim2.new(1, -2, 1, -2)
+	MainInner.Position = UDim2.fromOffset(1, 1)
+	MainInner.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	MainInner.BorderSizePixel = 0
+	MainInner.Parent = MainInline
 
+	local Main = Instance.new("Frame")
+	Main.Name = "Main"
+	Main.Size = UDim2.new(1, -2, 1, -2)
+	Main.Position = UDim2.fromOffset(1, 1)
+	Main.BackgroundColor3 = Library.Dark
+	Main.BorderSizePixel = 0
+	Main.Parent = MainInner
+
+	MakeDraggable(Main, MainOutline)
+
+	-- SIDEBAR
+	local Sidebar = Instance.new("Frame")
+	Sidebar.Name = "Sidebar"
+	Sidebar.Size = UDim2.new(0, 110, 1, -40)
+	Sidebar.Position = UDim2.fromOffset(15, 20)
+	Sidebar.BackgroundColor3 = Library.Dark
+	Sidebar.BackgroundTransparency = 1
+	Sidebar.Parent = Main
+	local SidebarOutline = Instance.new("UIStroke")
+	SidebarOutline.Color = Color3.fromRGB(50, 50, 50)
+	SidebarOutline.Parent = Sidebar
+	local SidebarLayout = Instance.new("UIListLayout")
+	SidebarLayout.Padding = UDim.new(0, 5)
+	SidebarLayout.Parent = Sidebar
+	local SidebarPadding = Instance.new("UIPadding")
+	SidebarPadding.PaddingTop = UDim.new(0, 10)
+	SidebarPadding.PaddingLeft = UDim.new(0, 10)
+	SidebarPadding.Parent = Sidebar
+
+	-- CONTAINER Area
 	local Container = Instance.new("Frame")
-	Container.Size = UDim2.new(1, -20, 1, -55)
-	Container.Position = UDim2.fromOffset(10, 45)
+	Container.Name = "Container"
+	Container.Size = UDim2.new(1, -155, 1, -40)
+	Container.Position = UDim2.fromOffset(140, 20)
+	Container.BackgroundColor3 = Library.Dark
 	Container.BackgroundTransparency = 1
-	Container.Parent = MainOutline
+	Container.Parent = Main
+    local ContainerOutline = Instance.new("UIStroke")
+	ContainerOutline.Color = Color3.fromRGB(50, 50, 50)
+	ContainerOutline.Parent = Container
 
-	local TabBar = Instance.new("Frame")
-	TabBar.Size = UDim2.new(1, 0, 0, 20)
-	TabBar.Position = UDim2.fromOffset(0, 25)
-	TabBar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-	TabBar.BorderSizePixel = 0
-	TabBar.Parent = MainOutline
-
-	local TabList = Instance.new("UIListLayout")
-	TabList.FillDirection = Enum.FillDirection.Horizontal
-	TabList.SortOrder = Enum.SortOrder.LayoutOrder
-	TabList.Parent = TabBar
+	local Footer = Instance.new("TextLabel")
+	Footer.Size = UDim2.fromOffset(300, 20)
+	Footer.Position = UDim2.new(1, -10, 1, -5)
+	Footer.AnchorPoint = Vector2.new(1, 1)
+	Footer.BackgroundTransparency = 1
+	Footer.Text = os.date("%b %d %Y") .. " | " .. LocalPlayer.Name:lower()
+	Footer.TextColor3 = Color3.fromRGB(120, 120, 120)
+	Footer.Font = Enum.Font.Code
+	Footer.TextSize = 13
+	Footer.TextXAlignment = Enum.TextXAlignment.Right
+	Footer.Parent = Container
 
 	local Overlay = Instance.new("Frame")
 	Overlay.Name = "Overlay"
 	Overlay.Size = UDim2.new(1, 0, 1, 0)
 	Overlay.BackgroundTransparency = 1
-	Overlay.ZIndex = 1000
-	Overlay.Parent = MainOutline
+	Overlay.ZIndex = 500
+	Overlay.Parent = GUI
 
-	local Window = { Tabs = {}, ActiveTab = nil }
-
-	if Library.CanDrag then
-		local dragging, dragInput, dragStart, startPos
-		TopBar.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 then
-				dragging = true
-				dragStart = input.Position
-				startPos = MainOutline.Position
-				input.Changed:Connect(function()
-					if input.UserInputState == Enum.UserInputState.End then
-						dragging = false
-					end
-				end)
-			end
-		end)
-		TopBar.InputChanged:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseMovement then
-				dragInput = input
-			end
-		end)
-		UserInputService.InputChanged:Connect(function(input)
-			if input == dragInput and dragging then
-				local delta = input.Position - dragStart
-				MainOutline.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-			end
-		end)
-	end
+	local Window = { Tabs = {} }
 
 	function Window:CreateTab(name)
 		local TabButton = Instance.new("TextButton")
-		TabButton.Size = UDim2.new(0, 0, 1, 0)
-		TabButton.AutomaticSize = Enum.AutomaticSize.X
+		TabButton.Size = UDim2.new(1, 0, 0, 20)
 		TabButton.BackgroundTransparency = 1
-		TabButton.Text = "  " .. name:lower() .. "  "
+		TabButton.Text = name:lower()
 		TabButton.TextColor3 = Color3.fromRGB(150, 150, 150)
 		TabButton.Font = Enum.Font.Code
-		TabButton.TextSize = 13
-		TabButton.Parent = TabBar
+		TabButton.TextSize = 14
+		TabButton.TextXAlignment = Enum.TextXAlignment.Left
+		TabButton.Parent = Sidebar
 
-		local TabFrame = Instance.new("Frame")
-		TabFrame.Size = UDim2.new(1, 0, 1, 0)
+		local TabFrame = Instance.new("ScrollingFrame")
+		TabFrame.Size = UDim2.new(1, -20, 1, -45)
+		TabFrame.Position = UDim2.fromOffset(10, 10)
 		TabFrame.BackgroundTransparency = 1
+		TabFrame.BorderSizePixel = 0
 		TabFrame.Visible = false
+		TabFrame.ScrollBarThickness = 0
+		TabFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+		TabFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
 		TabFrame.Parent = Container
 
-		local LeftSide = Instance.new("ScrollingFrame")
-		LeftSide.Size = UDim2.new(0.5, -5, 1, 0)
-		LeftSide.BackgroundTransparency = 1
-		LeftSide.CanvasSize = UDim2.new(0, 0, 0, 0)
-		LeftSide.ScrollBarThickness = 0
-		LeftSide.Parent = TabFrame
-		local LeftList = Instance.new("UIListLayout")
-		LeftList.Padding = UDim.new(0, 10)
-		LeftList.Parent = LeftSide
+		local LeftColumn = Instance.new("Frame")
+		LeftColumn.Size = UDim2.new(0.5, -10, 1, 0)
+		LeftColumn.BackgroundTransparency = 1
+		LeftColumn.Parent = TabFrame
+		local LeftLayout = Instance.new("UIListLayout")
+		LeftLayout.Padding = UDim.new(0, 25)
+		LeftLayout.Parent = LeftColumn
 
-		local RightSide = Instance.new("ScrollingFrame")
-		RightSide.Size = UDim2.new(0.5, -5, 1, 0)
-		RightSide.Position = UDim2.new(0.5, 5, 0, 0)
-		RightSide.BackgroundTransparency = 1
-		RightSide.CanvasSize = UDim2.new(0, 0, 0, 0)
-		RightSide.ScrollBarThickness = 0
-		RightSide.Parent = TabFrame
-		local RightList = Instance.new("UIListLayout")
-		RightList.Padding = UDim.new(0, 10)
-		RightList.Parent = RightSide
+		local RightColumn = Instance.new("Frame")
+		RightColumn.Size = UDim2.new(0.5, -10, 1, 0)
+		RightColumn.Position = UDim2.new(0.5, 10, 0, 0)
+		RightColumn.BackgroundTransparency = 1
+		RightColumn.Parent = TabFrame
+		local RightLayout = Instance.new("UIListLayout")
+		RightLayout.Padding = UDim.new(0, 25)
+		RightLayout.Parent = RightColumn
 
 		local Tab = {}
+
 		function Tab:CreateSector(name, side)
 			local SectorFrame = Instance.new("Frame")
-			SectorFrame.Size = UDim2.new(1, 0, 0, 0)
-			SectorFrame.AutomaticSize = Enum.AutomaticSize.Y
-			SectorFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-			SectorFrame.BorderSizePixel = 0
-			SectorFrame.Parent = (side == "left" and LeftSide or RightSide)
-			local SectorStroke = Instance.new("UIStroke")
-			SectorStroke.Color = Color3.fromRGB(35, 35, 35)
-			SectorStroke.Parent = SectorFrame
+			SectorFrame.Size = UDim2.new(1, 0, 0, 25)
+			SectorFrame.BackgroundTransparency = 1
+			SectorFrame.Parent = (side:lower() == "left" and LeftColumn or RightColumn)
 
-			local Label = Instance.new("TextLabel")
-			Label.Size = UDim2.new(1, -10, 0, 20)
-			Label.Position = UDim2.fromOffset(10, -10)
-			Label.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-			Label.Text = " " .. name:lower() .. " "
-			Label.TextColor3 = Color3.fromRGB(200, 200, 200)
-			Label.Font = Enum.Font.Code
-			Label.TextSize = 13
-			Label.AutomaticSize = Enum.AutomaticSize.X
-			Label.Parent = SectorFrame
+			local Notch = Instance.new("Frame")
+			Notch.Size = UDim2.new(0, 0, 0, 2)
+			Notch.Position = UDim2.fromOffset(10, -1)
+			Notch.BackgroundColor3 = Library.Dark
+			Notch.BorderSizePixel = 0
+			Notch.ZIndex = 2
+			Notch.Parent = SectorFrame
+
+			local Title = Instance.new("TextLabel")
+			Title.AutomaticSize = Enum.AutomaticSize.X
+			Title.BackgroundTransparency = 1
+			Title.Text = "  " .. name:lower() .. "  "
+			Title.TextColor3 = Color3.fromRGB(210, 210, 210)
+			Title.Font = Enum.Font.Code
+			Title.TextSize = 13
+			Title.Parent = Notch
+			Title:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+				Notch.Size = UDim2.fromOffset(Title.AbsoluteSize.X, 2)
+			end)
 
 			local Content = Instance.new("Frame")
-			Content.Size = UDim2.new(1, -20, 0, 0)
-			Content.Position = UDim2.fromOffset(10, 15)
-			Content.AutomaticSize = Enum.AutomaticSize.Y
+			Content.Size = UDim2.new(1, -20, 1, -20)
+			Content.Position = UDim2.fromOffset(10, 12)
 			Content.BackgroundTransparency = 1
 			Content.Parent = SectorFrame
 			local ContentLayout = Instance.new("UIListLayout")
-			ContentLayout.Padding = UDim.new(0, 8)
+			ContentLayout.Padding = UDim.new(0, 10)
 			ContentLayout.Parent = Content
-			local BottomPadding = Instance.new("UIPadding")
-			BottomPadding.PaddingBottom = UDim.new(0, 10)
-			BottomPadding.Parent = Content
+			ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+				SectorFrame.Size = UDim2.new(1, 0, 0, ContentLayout.AbsoluteContentSize.Y + 25)
+			end)
 
 			local Sector = {}
 
@@ -327,7 +359,7 @@ function Library:CreateWindow(name)
 				Button.Position = UDim2.fromOffset(0, 15)
 				Button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 				Button.BorderSizePixel = 0
-				Button.Text = "  " .. tostring(default or "none"):lower()
+				Button.Text = "  " .. (default or "none")
 				Button.TextColor3 = Color3.fromRGB(200, 200, 200)
 				Button.Font = Enum.Font.Code
 				Button.TextSize = 12
@@ -377,7 +409,7 @@ function Library:CreateWindow(name)
 						Item.Size = UDim2.new(1, 0, 0, 18)
 						Item.BackgroundTransparency = 1
 						Item.Text = "  " .. v:lower()
-						Item.TextColor3 = (tostring(Selected):lower() == v:lower()) and Library.Accent or Color3.fromRGB(180, 180, 180)
+						Item.TextColor3 = (Selected == v) and Library.Accent or Color3.fromRGB(180, 180, 180)
 						Item.Font = Enum.Font.Code
 						Item.TextSize = 12
 						Item.TextXAlignment = Enum.TextXAlignment.Left
@@ -926,4 +958,5 @@ function Library:CreateWindow(name)
 end
 
 return Library
--- yam is a femboy twink that loves exhale and sanetys dick
+
+-- yamka is a gay femboy twink that loves sanety and exhale dick
